@@ -152,7 +152,11 @@ class TransaksiController extends Controller
                 'keterangan'    => $request['keterangan'],
             ];
 
-            $transaksi = Transaksi::where("id_transaksi", (int) $request['id_transaksi'])->update($data);
+            $transaksi  = Transaksi::where("id_transaksi", (int) $request['id_transaksi'])->update($data);
+            $barang     = Barang::find($request['id_barang']);
+            $pembayaran = Pembayaran::where("id_transaksi", (int) $request['id_transaksi'])->update([
+                'total_bayar'   => $barang->harga,
+            ]);
 
             DB::commit();
 
