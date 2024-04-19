@@ -15,7 +15,7 @@
                 @if(isset($id_barang) && $id_barang)
                 <option value="{{ $id_barang }}" selected>{{ $barang->firstWhere('id_barang', $id_barang)['nama_barang'] }}</option>
                 @else
-                <option value="">-- Pilih Barang --</option>
+                <option value="" selected>-- Pilih Barang --</option>
                 @endif
 
                 @if($tipe == 'create')
@@ -44,7 +44,7 @@
                 @if(isset($id_pembeli) && $id_pembeli)
                 <option value="{{ $id_pembeli }}" selected>{{ $pembeli->firstWhere('id_pembeli', $id_pembeli)['nama_pembeli'] }}</option>
                 @else
-                <option value="">-- Pilih Pembeli --</option>
+                <option value="" selected>-- Pilih Pembeli --</option>
                 @endif
 
                 @if($tipe == 'create')

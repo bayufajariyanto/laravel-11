@@ -8,6 +8,7 @@ use App\Models\Pembeli;
 use App\Models\Transaksi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Throwable;
 
 class TransaksiController extends Controller
@@ -34,7 +35,7 @@ class TransaksiController extends Controller
         $pembeli    = Pembeli::select("id_pembeli", "nama_pembeli")->get();
 
         return view('components.transaksi.form', [
-            "title"     => "Tambah Data",
+            "title"     => "Tambah Data Transaksi",
             "tipe"      => "create",
             "barang"    => $barang,
             "pembeli"   => $pembeli,
@@ -47,32 +48,32 @@ class TransaksiController extends Controller
      */
     public function store(Request $request)
     {
+        $validatedData = Validator::make($request->all(), [
+            'id_barang'     => 'required',
+            'id_pembeli'    => 'required',
+            'tanggal'       => 'required',
+            'keterangan'    => 'required',
+        ])->validate();
+
+        $tgl = $request['tanggal'];
+        if (strtotime($tgl) > time()) {
+            return toastr()->error('Tanggal tidak boleh melebihi hari ini');
+        }
+
+        $data = [
+            'id_barang'     => (int) $request['id_barang'],
+            'id_pembeli'    => (int) $request['id_pembeli'],
+            'tanggal'       => $request['tanggal'],
+            'keterangan'    => $request['keterangan'],
+        ];
+
         try {
             DB::beginTransaction();
-            $validatedData = $request->validate([
-                'id_barang'     => 'required',
-                'id_pembeli'    => 'required',
-                'tanggal'       => 'required',
-                'keterangan'    => 'required',
-            ]);
-
-            $tgl = $request['tanggal'];
-            if (strtotime($tgl) > time()) :
-                return toastr()->error('Tanggal tidak boleh melebihi hari ini');
-            endif;
-
-            $data = [
-                'id_barang'     => (int) $request['id_barang'],
-                'id_pembeli'    => (int) $request['id_pembeli'],
-                'tanggal'       => $request['tanggal'],
-                'keterangan'    => $request['keterangan'],
-            ];
-
             $transaksi = Transaksi::create($data);
-
+            $barang = Barang::find($transaksi->id_barang);
             Pembayaran::create([
                 'tgl_bayar'     => $request['tanggal'],
-                'total_bayar'   => Barang::find($transaksi->id_barang)->harga,
+                'total_bayar'   => $barang->harga,
                 'id_transaksi'  => $transaksi->id_transaksi,
             ]);
             DB::commit();
@@ -81,7 +82,7 @@ class TransaksiController extends Controller
             return response()->redirectTo("/");
         } catch (Throwable $th) {
             DB::rollBack();
-            return toastr()->error('Data Transaksi Berhasil Disimpan');
+            return toastr()->error('Data Transaksi Gagal Disimpan');
         }
     }
 
@@ -110,7 +111,7 @@ class TransaksiController extends Controller
         $pembeli    = Pembeli::select("id_pembeli", "nama_pembeli")->get();
 
         return view('components.transaksi.form', [
-            "title"         => "Edit Data",
+            "title"         => "Edit Data Transaksi",
             "tipe"          => "edit",
             "id_transaksi"  => @$transaksi->id_transaksi,
             "id_barang"     => @$transaksi->id_barang,
