@@ -10,3 +10,9 @@ Route::get('/delete/{id}',  [TransaksiController::class, "delete"])->name('trans
 
 Route::post('/transaksi',   [TransaksiController::class, "store"])->name('transaksi.store');
 Route::post('/update',      [TransaksiController::class, "update"])->name('transaksi.update');
+
+
+Route::fallback(function () {
+    toastr()->error('Halaman tidak ditemukan');
+    return response()->redirectTo("/");
+});
